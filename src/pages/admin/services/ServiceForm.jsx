@@ -25,8 +25,7 @@ import { toast } from "react-toastify";
 import {
   Save as SaveIcon,
   Cancel as CancelIcon,
-  MiscellaneousServices as ServicesIcon,
-  ArrowBack as } from "@mui/icons-material";
+  MiscellaneousServices as ServicesIcon} from "@mui/icons-material";
 import api from "../../../services/api";
 
 // Enum Options

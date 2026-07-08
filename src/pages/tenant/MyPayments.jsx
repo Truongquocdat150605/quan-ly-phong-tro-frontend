@@ -28,8 +28,7 @@ import {
   Pending as PendingIcon,
   Cancel as CancelIcon,
   QrCode as QrCodeIcon,
-  Visibility as VisibilityIcon,
-  Download as } from "@mui/icons-material";
+  Visibility as VisibilityIcon} from "@mui/icons-material";
 import { toast } from "react-toastify";
 import api from "../../services/api";
 import paymentService from "../../features/payment/paymentService";
