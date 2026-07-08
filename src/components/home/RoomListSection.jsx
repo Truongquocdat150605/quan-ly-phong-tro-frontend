@@ -4,9 +4,8 @@
  * @module components/home
  */
 import React from "react";
-import { Box, Container, Typography, Stack, Skeleton } from "@mui/material";
+import { Box, Typography, Stack, Skeleton } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import FadeIn from "./FadeIn";
 import RoomCard from "./RoomCard";
 
 const RoomListSection = ({ title, rooms, loading, icon }) => {

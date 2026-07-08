@@ -4,8 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import api from "../../services/api";
 import {
   Container, Grid, Typography, Button, Box,
-  Alert, Pagination, Stack, Chip,
-} from "@mui/material";
+  Alert, Pagination, Stack, } from "@mui/material";
 import ClearAllIcon from "@mui/icons-material/ClearAll";
 import { motion } from "framer-motion";
 import useDebounce from "../../hooks/useDebounce";

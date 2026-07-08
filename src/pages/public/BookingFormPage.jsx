@@ -41,7 +41,7 @@ const BookingFormPage = () => {
         break;
       case "email":
         if (!value.trim()) error = "Vui lòng nhập Email";
-        else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value)) error = "Email không hợp lệ";
+        else if (!/^[\w-.]+@([\w-]+.)+[\w-]{2,4}$/.test(value)) error = "Email không hợp lệ";
         break;
       case "identityNumber":
         if (value && !/^\d{12}$/.test(value)) error = "CCCD phải đúng 12 số";

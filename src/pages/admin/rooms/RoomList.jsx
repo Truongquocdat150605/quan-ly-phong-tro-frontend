@@ -18,16 +18,12 @@ import {
   Box,
   Grid,
   Card,
-  CardContent,
   Tooltip,
   TextField,
   InputAdornment,
   Tabs,
   Tab,
-  Menu,
-  MenuItem,
-  Badge,
-} from "@mui/material";
+  } from "@mui/material";
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
@@ -35,11 +31,9 @@ import {
   MeetingRoom as MeetingRoomIcon,
   Search as SearchIcon,
   Refresh as RefreshIcon,
-  FilterList as FilterIcon,
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   Construction as MaintenanceIcon,
-  MoreVert as MoreVertIcon,
   Image as ImageIcon,
 } from "@mui/icons-material";
 import { toast } from "react-toastify";
@@ -78,9 +72,7 @@ const RoomList = () => {
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [tabValue, setTabValue] = useState(0);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedRoom, setSelectedRoom] = useState(null);
-  const navigate = useNavigate();
+      const navigate = useNavigate();
 
   const fetchRooms = async () => {
     try {
@@ -111,16 +103,8 @@ const RoomList = () => {
     }
   };
 
-  const handleMenuOpen = (event, room) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedRoom(room);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedRoom(null);
-  };
-
+  
+  
   // Filter rooms
   const filteredRooms = rooms.filter((room) => {
     const matchSearch =

@@ -29,8 +29,7 @@ import {
   Cancel as CancelIcon,
   QrCode as QrCodeIcon,
   Visibility as VisibilityIcon,
-  Download as DownloadIcon,
-} from "@mui/icons-material";
+  Download as } from "@mui/icons-material";
 import { toast } from "react-toastify";
 import api from "../../services/api";
 import paymentService from "../../features/payment/paymentService";
