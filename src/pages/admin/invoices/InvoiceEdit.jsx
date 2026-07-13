@@ -77,18 +77,23 @@ const InvoiceEdit = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const toNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : 0;
+  };
+
   const calculateElectricityAmount = () => {
-    const used = Math.max(0, formData.electricityEnd - formData.electricityStart);
-    return used * formData.electricityPrice;
+    const used = Math.max(0, toNumber(formData.electricityEnd) - toNumber(formData.electricityStart));
+    return used * toNumber(formData.electricityPrice);
   };
 
   const calculateWaterAmount = () => {
-    const used = Math.max(0, formData.waterEnd - formData.waterStart);
-    return used * formData.waterPrice;
+    const used = Math.max(0, toNumber(formData.waterEnd) - toNumber(formData.waterStart));
+    return used * toNumber(formData.waterPrice);
   };
 
   const calculateTotal = () => {
-    return Number(formData.rentalAmount) + calculateElectricityAmount() + calculateWaterAmount() + Number(formData.serviceAmount);
+    return toNumber(formData.rentalAmount) + calculateElectricityAmount() + calculateWaterAmount() + toNumber(formData.serviceAmount);
   };
 
   const handleSubmit = async () => {
@@ -96,8 +101,16 @@ const InvoiceEdit = () => {
       setSaving(true);
       const payload = {
         ...formData,
+        rentalAmount: toNumber(formData.rentalAmount),
+        electricityStart: toNumber(formData.electricityStart),
+        electricityEnd: toNumber(formData.electricityEnd),
+        electricityPrice: toNumber(formData.electricityPrice),
         electricityAmount: calculateElectricityAmount(),
+        waterStart: toNumber(formData.waterStart),
+        waterEnd: toNumber(formData.waterEnd),
+        waterPrice: toNumber(formData.waterPrice),
         waterAmount: calculateWaterAmount(),
+        serviceAmount: toNumber(formData.serviceAmount),
         totalAmount: calculateTotal(),
       };
 

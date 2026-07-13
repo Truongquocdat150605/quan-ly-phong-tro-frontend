@@ -4,12 +4,13 @@
  * @module pages/admin/expenses
  */
 import React, { useEffect, useState } from "react";
-import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, IconButton, Chip, Tooltip, Stack, LinearProgress } from "@mui/material";
+import { Box, Container, Typography, Paper, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, IconButton, Chip, Tooltip, Stack, LinearProgress, TablePagination } from "@mui/material";
 import { Add as AddIcon, Edit as EditIcon, Delete as DeleteIcon, Receipt as ReceiptIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
 import { formatVND } from "../../../utils/formatVND";
+import { paginateRows, sortNewestFirst } from "../../../utils/adminListUtils";
 
 const Card = ({ children, sx }) => (
   <Paper elevation={0} sx={{ p: 2, borderRadius: 3, boxShadow: "0 4px 12px rgba(0,0,0,0.05)", ...sx }}>
@@ -21,6 +22,8 @@ const ExpenseList = () => {
   const navigate = useNavigate();
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const fetchData = async () => {
     setLoading(true);
@@ -52,6 +55,8 @@ const ExpenseList = () => {
 
   const totalExpenses = expenses.reduce((sum, e) => sum + (e.amount || 0), 0);
   const netCashFlow = -totalExpenses;
+  const sortedExpenses = sortNewestFirst(expenses, ["updatedAt", "lastModifiedDate", "expenseDate", "createdAt", "id"]);
+  const paginatedExpenses = paginateRows(sortedExpenses, page, rowsPerPage);
 
   if (loading) {
     return (
@@ -114,8 +119,8 @@ const ExpenseList = () => {
         </Grid>
 
         {/* Expenses Table */}
-        <TableContainer component={Paper} sx={{ borderRadius: 4, overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-          <Table>
+        <TableContainer component={Paper} sx={{ borderRadius: 2, overflowX: "auto", overflowY: "visible", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+          <Table sx={{ minWidth: 820 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "#ef4444" }}>
                 <TableCell sx={{ color: "white", fontWeight: 700 }}>Ngày</TableCell>
@@ -127,14 +132,14 @@ const ExpenseList = () => {
             </TableHead>
 
             <TableBody>
-              {expenses.length === 0 ? (
+              {sortedExpenses.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} align="center" sx={{ py: 5 }}>
                     <Typography color="text.secondary">Chưa có chi phí nào</Typography>
                   </TableCell>
                 </TableRow>
               ) : (
-                expenses.map((expense) => (
+                paginatedExpenses.map((expense) => (
                   <TableRow key={expense.id} hover>
                     <TableCell>{expense.expenseDate}</TableCell>
                     <TableCell><Typography fontWeight={600}>{expense.description}</Typography></TableCell>
@@ -163,6 +168,19 @@ const ExpenseList = () => {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            component="div"
+            count={sortedExpenses.length}
+            page={page}
+            onPageChange={(event, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 20, 50]}
+            labelRowsPerPage="Dòng/trang"
+          />
         </TableContainer>
       </Container>
     </Box>

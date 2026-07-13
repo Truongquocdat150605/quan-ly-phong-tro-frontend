@@ -133,8 +133,6 @@ const ServiceForm = ({ initialData, isEdit, serviceId }) => {
     }
   };
 
-  const selectedCategory = SERVICE_CATEGORIES.find((c) => c.value === form.category);
-
   return (
     <Box sx={{ bgcolor: "#f8fafc", minHeight: "100vh", py: 4 }}>
       <Container maxWidth="md">

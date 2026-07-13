@@ -4,13 +4,14 @@
  * @module pages/admin/contracts
  */
 import React, { useEffect, useState } from "react";
-import { Box, Button, Chip, Container, Grid, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography, Avatar, Stack, Tabs, Tab, CircularProgress } from "@mui/material";
+import { Box, Button, Chip, Container, Grid, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography, Avatar, Stack, Tabs, Tab, CircularProgress, TablePagination } from "@mui/material";
 import { Add, Edit, Delete, HistoryEdu, CheckCircle, Pending, Cancel, Draw as DrawIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
 import { formatVND } from "../../../utils/formatVND";
 import ContractSignDialog from "../../../components/contracts/ContractSignDialog";
+import { paginateRows, sortNewestFirst } from "../../../utils/adminListUtils";
 
 const getStatusChip = (status) => {
   switch (status) {
@@ -34,6 +35,8 @@ const ContractList = () => {
   const [loading, setLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
   const [signDialog, setSignDialog] = useState({ open: false, contract: null });
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const fetchData = async () => {
     try {
@@ -59,6 +62,12 @@ const ContractList = () => {
     if (tabValue === 3) return contract.status === "EXPIRED";
     return true;
   });
+  const sortedContracts = sortNewestFirst(filteredContracts, ["lastModifiedDate", "updatedAt", "createdAt", "startDate", "id"]);
+  const paginatedContracts = paginateRows(sortedContracts, page, rowsPerPage);
+
+  useEffect(() => {
+    setPage(0);
+  }, [tabValue]);
 
   const stats = {
     total: contracts.length,
@@ -149,8 +158,8 @@ const ContractList = () => {
         </Box>
 
         {/* Contracts Table */}
-        <TableContainer component={Paper} sx={{ borderRadius: 4, overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-          <Table>
+        <TableContainer component={Paper} sx={{ borderRadius: 2, overflowX: "auto", overflowY: "visible", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+          <Table sx={{ minWidth: 1120 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "#0f766e" }}>
                 <TableCell sx={{ color: "white", fontWeight: 700 }}>Mã HD</TableCell>
@@ -165,12 +174,12 @@ const ContractList = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredContracts.length === 0 ? (
+              {sortedContracts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} align="center" sx={{ py: 4 }}><Typography color="text.secondary">Không có hợp đồng nào</Typography></TableCell>
                 </TableRow>
               ) : (
-                filteredContracts.map((contract) => (
+                paginatedContracts.map((contract) => (
                   <TableRow key={contract.id} hover>
                     <TableCell>#{contract.id}</TableCell>
                     <TableCell>
@@ -212,6 +221,19 @@ const ContractList = () => {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            component="div"
+            count={sortedContracts.length}
+            page={page}
+            onPageChange={(event, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 20, 50]}
+            labelRowsPerPage="Dòng/trang"
+          />
         </TableContainer>
       </Container>
 

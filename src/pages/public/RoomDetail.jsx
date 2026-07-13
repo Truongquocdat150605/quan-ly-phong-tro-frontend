@@ -5,8 +5,19 @@
  */
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Box, Button, Alert, Grid, Stack, Typography, Divider } from "@mui/material";
-import { ArrowBack as ArrowBackIcon, Wifi as WifiIcon, LocalParking as ParkingIcon, AcUnit as AcUnitIcon, WaterDrop as WaterIcon, ElectricBolt as ElectricIcon, Shield as ShieldIcon } from "@mui/icons-material";
+import { Box, Button, Alert, Grid, Stack, Typography, Paper } from "@mui/material";
+import { 
+  ArrowBack as ArrowBackIcon, 
+  Wifi as WifiIcon, 
+  LocalParking as ParkingIcon, 
+  AcUnit as AcUnitIcon, 
+  WaterDrop as WaterIcon, 
+  ElectricBolt as ElectricIcon, 
+  Shield as ShieldIcon, 
+  Payments as PaymentsIcon, 
+  WaterDamage as WaterDamageIcon, 
+  Security as SecurityIcon 
+} from "@mui/icons-material";
 import { motion } from "framer-motion";
 import api from "../../services/api";
 
@@ -82,8 +93,13 @@ const RoomDetail = () => {
   const status = statusConfig[room.status] || statusConfig.AVAILABLE;
 
   return (
-    <Box sx={{ bgcolor: "#fff", minHeight: "100vh", pb: 12 }}>
-      <Box sx={{ maxWidth: 1120, mx: "auto", px: { xs: 2, sm: 3, md: 4 }, pt: 4 }}>
+    <Box sx={{ 
+      bgcolor: "#fafafa", 
+      minHeight: "100vh", 
+      pb: 12,
+      backgroundImage: "radial-gradient(circle at top right, rgba(15, 118, 110, 0.05), transparent 400px)"
+    }}>
+      <Box sx={{ maxWidth: 1120, mx: "auto", px: { xs: 2, sm: 3, md: 4 }, pt: { xs: 2, md: 4 } }}>
         
         {/* BREADCRUMB */}
         <motion.div initial={{ opacity: 0, x: -15 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }}>
@@ -91,12 +107,22 @@ const RoomDetail = () => {
             <Button
               startIcon={<ArrowBackIcon />}
               onClick={() => navigate("/rooms")}
-              sx={{ fontWeight: 700, color: "#475569", textTransform: "none", p: 0, "&:hover": { bgcolor: "transparent", color: "#0f766e" } }}
+              sx={{ 
+                fontWeight: 600, 
+                color: "#64748b", 
+                textTransform: "none", 
+                p: "6px 12px", 
+                borderRadius: "8px",
+                "&:hover": { bgcolor: "#f1f5f9", color: "#0f766e" } 
+              }}
             >
               Danh sách phòng
             </Button>
-            <Typography color="text.disabled">/</Typography>
-            <Typography color="text.secondary" fontWeight={600}>Phòng {room.roomNumber}</Typography>
+            <Typography color="text.disabled" sx={{ mx: 1 }}>/</Typography>
+            <Typography color="#0f766e" fontWeight={600} sx={{
+              bgcolor: "rgba(15, 118, 110, 0.1)",
+              px: 1.5, py: 0.5, borderRadius: "6px", fontSize: "0.875rem"
+            }}>Phòng {room.roomNumber}</Typography>
           </Stack>
         </motion.div>
 
@@ -107,42 +133,71 @@ const RoomDetail = () => {
         <RoomGallery allImages={allImages} activeImg={activeImg} setActiveImg={setActiveImg} setImageError={setImageError} room={room} />
 
         {/* MAIN CONTENT */}
-        <Grid container spacing={{ xs: 4, md: 7 }}>
+        <Grid container spacing={{ xs: 4, md: 5 }}>
           
           {/* Left: Info */}
           <Grid item xs={12} md={7} lg={8}>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2, duration: 0.6 }}>
-              <RoomDescription room={room} />
-              <RoomAmenities services={room.services} defaultAmenities={DEFAULT_AMENITIES} />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.6 }}>
+              <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, borderRadius: "24px", mb: 4, border: "1px solid #e2e8f0" }}>
+                <RoomDescription room={room} />
+              </Paper>
+              
+              <Paper elevation={0} sx={{ p: { xs: 3, md: 4 }, borderRadius: "24px", mb: 4, border: "1px solid #e2e8f0" }}>
+                <RoomAmenities services={room.services} defaultAmenities={DEFAULT_AMENITIES} />
+              </Paper>
               
               {/* Pricing Details */}
-              <Box>
-                <Typography variant="h6" fontWeight={800} mb={3} color="#0f172a">
-                  Chi phí hàng tháng
+              <Paper elevation={0} sx={{ 
+                p: { xs: 3, md: 4 }, 
+                borderRadius: "24px", 
+                border: "1px solid #e2e8f0",
+                background: "linear-gradient(145deg, #ffffff, #f8fafc)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.02)"
+              }}>
+                <Typography variant="h5" fontWeight={800} mb={3} color="#0f172a" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <PaymentsIcon sx={{ color: '#0f766e' }} /> Chi phí hàng tháng
                 </Typography>
-                <Box sx={{ bgcolor: "#f8fafc", borderRadius: 3, border: "1px solid #f1f5f9", overflow: "hidden" }}>
+                <Grid container spacing={2}>
                   {[
-                    { label: "Tiền phòng", value: room.price ? new Intl.NumberFormat("vi-VN").format(room.price) + "đ" : "—" },
-                    { label: "Tiền điện", value: "Tính theo chỉ số (thực tế)" },
-                    { label: "Tiền nước", value: "Tính theo khối (thực tế)" },
-                    { label: "Tiền cọc", value: "1 tháng tiền phòng" },
-                  ].map((item, i, arr) => (
-                    <Box key={i}>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ px: 3, py: 2 }}>
-                        <Typography color="text.secondary" fontWeight={600}>{item.label}</Typography>
-                        <Typography fontWeight={700} color="#0f172a">{item.value}</Typography>
-                      </Stack>
-                      {i < arr.length - 1 && <Divider sx={{ borderColor: "#f1f5f9" }} />}
-                    </Box>
+                    { label: "Tiền phòng", value: room.price ? new Intl.NumberFormat("vi-VN").format(room.price) + "đ" : "—", icon: <PaymentsIcon color="primary" />, desc: "Thanh toán mỗi tháng" },
+                    { label: "Tiền điện", value: "Tính theo chỉ số", icon: <ElectricIcon color="warning" />, desc: "Giá nhà nước / KWh" },
+                    { label: "Tiền nước", value: "Tính theo khối", icon: <WaterDamageIcon color="info" />, desc: "Hoặc theo người (thực tế)" },
+                    { label: "Tiền cọc", value: "1 tháng", icon: <SecurityIcon color="success" />, desc: "Hoàn trả khi hết HĐ" },
+                  ].map((item, i) => (
+                    <Grid item xs={12} sm={6} key={i}>
+                      <Box sx={{ 
+                        display: 'flex', alignItems: 'flex-start', p: 2, 
+                        bgcolor: "#fff", borderRadius: "16px", 
+                        border: "1px solid #f1f5f9",
+                        transition: "all 0.3s ease",
+                        "&:hover": { borderColor: "#cbd5e1", transform: "translateY(-2px)", boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }
+                      }}>
+                        <Box sx={{ 
+                          p: 1.5, borderRadius: "12px", 
+                          bgcolor: `${item.icon.props.color}.light`, 
+                          color: `${item.icon.props.color}.main`,
+                          mr: 2, display: 'flex', opacity: 0.8
+                        }}>
+                          {React.cloneElement(item.icon, { sx: { fontSize: 24 } })}
+                        </Box>
+                        <Box>
+                          <Typography color="text.secondary" fontSize="0.875rem" fontWeight={500} mb={0.5}>{item.label}</Typography>
+                          <Typography fontWeight={700} color="#0f172a" fontSize="1.1rem">{item.value}</Typography>
+                          <Typography color="text.disabled" fontSize="0.75rem" mt={0.5}>{item.desc}</Typography>
+                        </Box>
+                      </Box>
+                    </Grid>
                   ))}
-                </Box>
-              </Box>
+                </Grid>
+              </Paper>
             </motion.div>
           </Grid>
 
           {/* Right: Booking Card (Sticky) */}
           <Grid item xs={12} md={5} lg={4}>
-            <RoomActionBox room={room} status={status} handleRentClick={handleRentClick} />
+            <Box sx={{ position: "sticky", top: 24 }}>
+              <RoomActionBox room={room} status={status} handleRentClick={handleRentClick} />
+            </Box>
           </Grid>
 
         </Grid>

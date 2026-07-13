@@ -2,6 +2,7 @@ import React, { Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { CircularProgress, Box } from "@mui/material";
+import { AuthProvider } from "./contexts/AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 
@@ -39,6 +40,7 @@ const NotificationMain = React.lazy(() => import("./pages/admin/notifications/No
 const ServiceList = React.lazy(() => import("./pages/admin/services/ServiceList"));
 const ServiceAdd = React.lazy(() => import("./pages/admin/services/ServiceAdd"));
 const ServiceEdit = React.lazy(() => import("./pages/admin/services/ServiceEdit"));
+const AccountProfile = React.lazy(() => import("./pages/account/AccountProfile"));
 
 // PUBLIC PAGES
 const RoomsPage = React.lazy(() => import("./pages/public/RoomsPage"));
@@ -56,7 +58,6 @@ const TenantMaintenance = React.lazy(() => import("./pages/tenant/TenantMaintena
 const ChangePassword = React.lazy(() => import("./pages/tenant/ChangePassword"));
 const MyPayments = React.lazy(() => import("./pages/tenant/MyPayments"));
 const MyNotifications = React.lazy(() => import("./pages/tenant/MyNotifications"));
-
 const LoadingFallback = () => (
   <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
     <CircularProgress />
@@ -66,11 +67,12 @@ const LoadingFallback = () => (
 function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <ToastContainer position="top-right" autoClose={3000} />
-      <ChatWidget />
-      <Suspense fallback={<LoadingFallback />}>
-        <Routes>
-          {/* AUTH */}
+      <AuthProvider>
+        <ToastContainer position="top-right" autoClose={3000} />
+        <ChatWidget />
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            {/* AUTH */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -85,13 +87,13 @@ function App() {
             <Route path="unauthorized" element={<UnauthorizedPage />} />
             <Route element={<ProtectedRoute />}>
               <Route path="booking-form" element={<BookingFormPage />} />
-              <Route path="tenant/profile" element={<TenantProfile />} />
-              <Route path="my-contracts" element={<MyContracts />} />
-              <Route path="my-invoices" element={<MyInvoices />} />
-              <Route path="my-maintenance" element={<TenantMaintenance />} />
+              <Route path="tenant/profile" element={<ProtectedRoute requiredRole="TENANT"><TenantProfile /></ProtectedRoute>} />
+              <Route path="my-contracts" element={<ProtectedRoute requiredRole="TENANT"><MyContracts /></ProtectedRoute>} />
+              <Route path="my-invoices" element={<ProtectedRoute requiredRole="TENANT"><MyInvoices /></ProtectedRoute>} />
+              <Route path="my-maintenance" element={<ProtectedRoute requiredRole="TENANT"><TenantMaintenance /></ProtectedRoute>} />
               <Route path="change-password" element={<ChangePassword />} />
-              <Route path="my-payments" element={<MyPayments />} />
-              <Route path="my-notifications" element={<MyNotifications />} />
+              <Route path="my-payments" element={<ProtectedRoute requiredRole="TENANT"><MyPayments /></ProtectedRoute>} />
+              <Route path="my-notifications" element={<ProtectedRoute requiredRole="TENANT"><MyNotifications /></ProtectedRoute>} />
             </Route>
           </Route>
 
@@ -100,6 +102,9 @@ function App() {
             <Route path="admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboard />} />
               <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="profile" element={<AccountProfile />} />
+              <Route path="change-password" element={<ChangePassword />} />
+              <Route path="my-notifications" element={<MyNotifications />} />
               <Route path="reports" element={<ReportMain />} />
               <Route path="rooms" element={<RoomList />} />
               <Route path="rooms/add" element={<RoomAdd />} />
@@ -125,6 +130,7 @@ function App() {
           </Route>
         </Routes>
       </Suspense>
+      </AuthProvider>
     </Router>
   );
 }

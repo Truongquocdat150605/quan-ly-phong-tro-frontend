@@ -5,7 +5,7 @@
  */
 import React from "react";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Box, Typography, Button, CircularProgress } from "@mui/material";
-import { CreditCard as CardIcon, AccountBalanceWallet as BankIcon } from "@mui/icons-material";
+import { CreditCard as CardIcon, AccountBalanceWallet as BankIcon, Payments as CashIcon } from "@mui/icons-material";
 import { formatVND } from "../../utils/formatVND";
 
 const PaymentModal = ({ open, handleClose, selectedInvoice, payLoading, handlePay }) => (
@@ -57,6 +57,20 @@ const PaymentModal = ({ open, handleClose, selectedInvoice, payLoading, handlePa
               }}
             >
               Thanh toán qua PayOS (VietQR)
+            </Button>
+
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={() => handlePay("cash")}
+              startIcon={<CashIcon />}
+              sx={{
+                py: 2, borderRadius: 3, borderColor: "#d97706", color: "#b45309",
+                fontWeight: 700, textTransform: "none", borderWidth: 2,
+                "&:hover": { borderWidth: 2, borderColor: "#b45309", bgcolor: "rgba(217, 119, 6, 0.06)", transform: "translateY(-2px)", transition: "all 0.2s" }
+              }}
+            >
+              Thanh toan tien mat
             </Button>
           </Box>
         )}

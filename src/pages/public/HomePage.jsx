@@ -26,8 +26,16 @@ const HomePage = () => {
 
   useEffect(() => {
     let mounted = true;
-    api.get("/rooms/hot").then(res => { if (mounted) { setHotRooms(Array.isArray(res) ? res : []); setLoadingHot(false); } });
-    api.get("/rooms/newest").then(res => { if (mounted) { setNewestRooms(Array.isArray(res) ? res : []); setLoadingNewest(false); } });
+    api
+      .get("/rooms/hot")
+      .then(res => { if (mounted) setHotRooms(Array.isArray(res) ? res : []); })
+      .catch(() => { if (mounted) setHotRooms([]); })
+      .finally(() => { if (mounted) setLoadingHot(false); });
+    api
+      .get("/rooms/newest")
+      .then(res => { if (mounted) setNewestRooms(Array.isArray(res) ? res : []); })
+      .catch(() => { if (mounted) setNewestRooms([]); })
+      .finally(() => { if (mounted) setLoadingNewest(false); });
     return () => { mounted = false; };
   }, []);
 

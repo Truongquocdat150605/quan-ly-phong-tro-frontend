@@ -34,9 +34,9 @@ const MyInvoices = () => {
   const [openPay, setOpenPay] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
 
-  const fetchMyInvoices = async () => {
+  const fetchMyInvoices = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError("");
       const res = await api.get("/invoices/my");
       setInvoices(Array.isArray(res) ? res : []);
@@ -49,12 +49,14 @@ const MyInvoices = () => {
         setInvoices([]);
       }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchMyInvoices();
+    const intervalId = setInterval(() => fetchMyInvoices(true), 30000);
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -127,6 +129,12 @@ const MyInvoices = () => {
         res = await paymentService.payWithStripe(selectedInvoice.id);
       } else if (method === "payos") {
         res = await paymentService.payWithPayOS(selectedInvoice.id);
+      } else if (method === "cash") {
+        res = await paymentService.payWithCash(selectedInvoice.id);
+        toast.success(res?.message || "Da ghi nhan thanh toan tien mat. Vui long cho admin xac nhan.");
+        handleClosePay();
+        fetchMyInvoices(true);
+        return;
       }
       if (res && res.payUrl) {
         toast.success("Đang chuyển hướng đến cổng thanh toán...");

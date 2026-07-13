@@ -48,7 +48,7 @@ api.interceptors.response.use(
       }
     }
 
-    if (status === 403) {
+    if (status === 403 && !isPublicRequest) {
       toast.error('Bạn không có quyền truy cập');
       if (window.location.pathname !== '/unauthorized') {
         window.location.href = '/unauthorized';

@@ -26,6 +26,7 @@ import {
   Tab,
   LinearProgress,
   Badge,
+  TablePagination,
 } from "@mui/material";
 import {
   PersonAdd as PersonAddIcon,
@@ -45,6 +46,7 @@ import SockJS from "sockjs-client";
 import api from "../../services/api";
 import ContractDialog from "./requests/ContractDialog";
 import ContactsTab from "./requests/ContactsTab";
+import { paginateRows, sortNewestFirst } from "../../utils/adminListUtils";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -79,6 +81,8 @@ const RequestManagement = () => {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tabValue, setTabValue] = useState(0);
+  const [requestPage, setRequestPage] = useState(0);
+  const [requestRowsPerPage, setRequestRowsPerPage] = useState(10);
 
   // Contract dialog state
   const [openContractDialog, setOpenContractDialog] = useState(false);
@@ -150,10 +154,21 @@ const RequestManagement = () => {
 
   const handleOpenContractDialog = (request) => {
     setSelectedRequest(request);
+    
+    // Đồng bộ ngày khách muốn chuyển vào, nếu không có thì lấy ngày hiện tại
+    let defaultStartDate = new Date().toISOString().split("T")[0];
+    if (request.desiredMoveInDate) {
+      try {
+        defaultStartDate = new Date(request.desiredMoveInDate).toISOString().split("T")[0];
+      } catch (e) {
+        // Fallback to today if invalid date
+      }
+    }
+
     setContractForm({
       rentPrice: request.room?.price || "",
-      deposit: "",
-      startDate: new Date().toISOString().split("T")[0],
+      deposit: request.room?.price || "", // Mặc định cọc 1 tháng tiền phòng
+      startDate: defaultStartDate,
       endDate: "",
     });
     setOpenContractDialog(true);
@@ -203,6 +218,12 @@ const RequestManagement = () => {
     if (tabValue === 3) return req.status === "REJECTED";
     return true;
   });
+  const sortedRequests = sortNewestFirst(filteredRequests, ["updatedAt", "lastModifiedDate", "createdAt", "desiredMoveInDate", "id"]);
+  const paginatedRequests = paginateRows(sortedRequests, requestPage, requestRowsPerPage);
+
+  useEffect(() => {
+    setRequestPage(0);
+  }, [tabValue]);
 
   if (loading) {
     return (
@@ -291,8 +312,8 @@ const RequestManagement = () => {
 
         {/* Rental Requests Table */}
         {tabValue !== 4 && (
-          <TableContainer component={Paper} sx={{ borderRadius: 4, overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-            <Table>
+          <TableContainer component={Paper} sx={{ borderRadius: 2, overflowX: "auto", overflowY: "visible", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+            <Table sx={{ minWidth: 980 }}>
               <TableHead>
                 <TableRow sx={{ bgcolor: "#0f766e" }}>
                   <TableCell sx={{ color: "white", fontWeight: 700 }}>Mã</TableCell>
@@ -305,14 +326,14 @@ const RequestManagement = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {filteredRequests.length === 0 ? (
+                {sortedRequests.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                       <Typography color="text.secondary">Không có yêu cầu nào</Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredRequests.map((req) => (
+                  paginatedRequests.map((req) => (
                     <TableRow key={req.id} hover>
                       <TableCell>#{req.id}</TableCell>
                       <TableCell>
@@ -371,17 +392,7 @@ const RequestManagement = () => {
                                 Duyệt + HĐ
                               </Button>
                             </Tooltip>
-                            <Tooltip title="Chấp nhận">
-                              <Button
-                                size="small"
-                                variant="outlined"
-                                startIcon={<CheckCircleIcon />}
-                                onClick={() => updateStatus(req.id, "APPROVED")}
-                                sx={{ borderColor: "#10b981", color: "#10b981" }}
-                              >
-                                Chấp nhận
-                              </Button>
-                            </Tooltip>
+
                             <Tooltip title="Từ chối">
                               <Button
                                 size="small"
@@ -403,6 +414,19 @@ const RequestManagement = () => {
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              component="div"
+              count={sortedRequests.length}
+              page={requestPage}
+              onPageChange={(event, newPage) => setRequestPage(newPage)}
+              rowsPerPage={requestRowsPerPage}
+              onRowsPerPageChange={(event) => {
+                setRequestRowsPerPage(parseInt(event.target.value, 10));
+                setRequestPage(0);
+              }}
+              rowsPerPageOptions={[10, 20, 50]}
+              labelRowsPerPage="Dòng/trang"
+            />
           </TableContainer>
         )}
 
