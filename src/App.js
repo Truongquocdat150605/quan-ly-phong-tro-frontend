@@ -85,8 +85,8 @@ function App() {
             <Route path="rooms/:id" element={<RoomDetail />} />
             <Route path="contact" element={<ContactPage />} />
             <Route path="unauthorized" element={<UnauthorizedPage />} />
+            <Route path="booking-form" element={<BookingFormPage />} />
             <Route element={<ProtectedRoute />}>
-              <Route path="booking-form" element={<BookingFormPage />} />
               <Route path="tenant/profile" element={<ProtectedRoute requiredRole="TENANT"><TenantProfile /></ProtectedRoute>} />
               <Route path="my-contracts" element={<ProtectedRoute requiredRole="TENANT"><MyContracts /></ProtectedRoute>} />
               <Route path="my-invoices" element={<ProtectedRoute requiredRole="TENANT"><MyInvoices /></ProtectedRoute>} />
