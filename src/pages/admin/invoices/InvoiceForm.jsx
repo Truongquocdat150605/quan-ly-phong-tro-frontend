@@ -13,6 +13,12 @@ const HEADER_BG = "linear-gradient(135deg, #0f766e 0%, #0d9488 100%)";
 
 const InvoiceForm = ({ formData, handleChange, handleSubmit, saving, calculateElectricityAmount, calculateWaterAmount, calculateTotal }) => {
   const navigate = useNavigate();
+  const toNumber = (value) => {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : 0;
+  };
+  const electricityUsage = Math.max(0, toNumber(formData.electricityEnd) - toNumber(formData.electricityStart));
+  const waterUsage = Math.max(0, toNumber(formData.waterEnd) - toNumber(formData.waterStart));
 
   return (
     <Paper sx={{ p: 4, borderRadius: 4, boxShadow: "0 10px 30px rgba(0,0,0,0.06)" }}>
@@ -26,7 +32,7 @@ const InvoiceForm = ({ formData, handleChange, handleSubmit, saving, calculateEl
             <TextField label="Chỉ số mới" name="electricityEnd" type="number" fullWidth value={formData.electricityEnd} onChange={handleChange} />
             <TextField label="Đơn giá (VNĐ/kWh)" name="electricityPrice" type="number" fullWidth value={formData.electricityPrice} onChange={handleChange} />
             <Alert severity="info" sx={{ borderRadius: 2 }}>
-              Tiền điện: {formatVND(calculateElectricityAmount())}
+              Đã dùng {electricityUsage} kWh - Tiền điện: {formatVND(calculateElectricityAmount())}
             </Alert>
           </Stack>
         </Grid>
@@ -40,7 +46,7 @@ const InvoiceForm = ({ formData, handleChange, handleSubmit, saving, calculateEl
             <TextField label="Chỉ số mới" name="waterEnd" type="number" fullWidth value={formData.waterEnd} onChange={handleChange} />
             <TextField label="Đơn giá (VNĐ/m³)" name="waterPrice" type="number" fullWidth value={formData.waterPrice} onChange={handleChange} />
             <Alert severity="info" sx={{ borderRadius: 2 }}>
-              Tiền nước: {formatVND(calculateWaterAmount())}
+              Đã dùng {waterUsage} m3 - Tiền nước: {formatVND(calculateWaterAmount())}
             </Alert>
           </Stack>
         </Grid>
@@ -82,7 +88,7 @@ const InvoiceForm = ({ formData, handleChange, handleSubmit, saving, calculateEl
             </Box>
             <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
               <Typography>Tiền phòng + Dịch vụ:</Typography>
-              <Typography fontWeight={600}>{formatVND(Number(formData.rentalAmount) + Number(formData.serviceAmount))}</Typography>
+              <Typography fontWeight={600}>{formatVND(toNumber(formData.rentalAmount) + toNumber(formData.serviceAmount))}</Typography>
             </Box>
             <Divider sx={{ my: 2 }} />
             <Box sx={{ display: "flex", justifyContent: "space-between" }}>

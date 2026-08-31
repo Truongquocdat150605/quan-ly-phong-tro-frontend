@@ -12,7 +12,7 @@ api.interceptors.request.use(
     const token = sessionStorage.getItem('token');
     const url = String(config.url || '');
     const method = String(config.method || 'get').toLowerCase();
-    const isAuthenticatedAuthRequest = url === '/auth/change-password';
+    const isAuthenticatedAuthRequest = ['/auth/change-password', '/auth/me', '/auth/profile'].includes(url);
     const isAuthRequest = url.startsWith('/auth/') && !isAuthenticatedAuthRequest;
     // Các request công khai không yêu cầu token
     const isPublicRoomsRequest = method === 'get' && (url === '/rooms' || url.startsWith('/rooms/'));
@@ -48,7 +48,7 @@ api.interceptors.response.use(
       }
     }
 
-    if (status === 403) {
+    if (status === 403 && !isPublicRequest) {
       toast.error('Bạn không có quyền truy cập');
       if (window.location.pathname !== '/unauthorized') {
         window.location.href = '/unauthorized';

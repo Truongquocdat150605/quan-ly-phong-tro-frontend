@@ -38,7 +38,7 @@ const AdminHeader = ({ collapsed, setCollapsed, unreadCount, handleNotificationH
           </Tooltip>
 
           <Tooltip title={unreadCount > 0 ? `Có ${unreadCount} thông báo chưa đọc` : "Không có thông báo mới"}>
-            <IconButton sx={{ color: "inherit" }} onClick={() => navigate("/my-notifications")} onMouseEnter={handleNotificationHover}>
+            <IconButton sx={{ color: "inherit" }} onClick={() => navigate("/admin/notifications")} onMouseEnter={handleNotificationHover}>
               <Badge badgeContent={unreadCount} color="error">
                 <Notifications />
               </Badge>
@@ -59,7 +59,7 @@ const AdminHeader = ({ collapsed, setCollapsed, unreadCount, handleNotificationH
 
           <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose} transformOrigin={{ horizontal: "right", vertical: "top" }} anchorOrigin={{ horizontal: "right", vertical: "bottom" }}>
             <MenuItem onClick={() => { handleMenuClose(); navigate("/admin/profile"); }}><Typography>Hồ sơ cá nhân</Typography></MenuItem>
-            <MenuItem onClick={() => { handleMenuClose(); navigate("/change-password"); }}><Typography>Đổi mật khẩu</Typography></MenuItem>
+            <MenuItem onClick={() => { handleMenuClose(); navigate("/admin/change-password"); }}><Typography>Đổi mật khẩu</Typography></MenuItem>
             <Divider />
             <MenuItem onClick={() => { handleMenuClose(); logout(); }} sx={{ color: "#ef4444" }}><Typography>Đăng xuất</Typography></MenuItem>
           </Menu>

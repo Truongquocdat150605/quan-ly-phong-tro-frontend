@@ -4,11 +4,12 @@
  * @module pages/admin/users
  */
 import React, { useEffect, useState, useMemo } from "react";
-import { Box, Button, Chip, Container, Grid, IconButton, InputAdornment, LinearProgress, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography, Avatar, Stack, FormControl, InputLabel } from "@mui/material";
+import { Box, Button, Chip, Container, Grid, IconButton, InputAdornment, LinearProgress, MenuItem, Paper, Select, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Tooltip, Typography, Avatar, Stack, FormControl, InputLabel, TablePagination } from "@mui/material";
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon, People as PeopleIcon, Search as SearchIcon, AdminPanelSettings as AdminIcon, Person as PersonIcon, Lock as LockIcon, LockOpen as UnlockIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
+import { paginateRows, sortNewestFirst } from "../../../utils/adminListUtils";
 
 const HEADER_BG = "linear-gradient(135deg, #1e40af 0%, #3b82f6 100%)";
 
@@ -28,6 +29,8 @@ const UserList = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const fetchUsers = async () => {
     try {
@@ -74,6 +77,13 @@ const UserList = () => {
       return matchSearch && matchRole;
     });
   }, [users, search, roleFilter]);
+
+  const sortedUsers = useMemo(() => sortNewestFirst(filteredUsers, ["updatedAt", "lastModifiedDate", "createdAt", "id"]), [filteredUsers]);
+  const paginatedUsers = useMemo(() => paginateRows(sortedUsers, page, rowsPerPage), [sortedUsers, page, rowsPerPage]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [search, roleFilter]);
 
   const stats = useMemo(() => {
     return {
@@ -152,8 +162,8 @@ const UserList = () => {
         {loading ? (
           <LinearProgress sx={{ borderRadius: 2 }} />
         ) : (
-          <TableContainer component={Paper} sx={{ borderRadius: 4, boxShadow: "0 10px 30px rgba(0,0,0,0.06)", overflow: "hidden" }}>
-            <Table>
+          <TableContainer component={Paper} sx={{ borderRadius: 2, boxShadow: "0 10px 30px rgba(0,0,0,0.06)", overflowX: "auto", overflowY: "visible" }}>
+            <Table sx={{ minWidth: 980 }}>
               <TableHead>
                 <TableRow sx={{ background: HEADER_BG }}>
                   {["#", "Người dùng", "Email / Điện thoại", "CCCD", "Vai trò", "Trạng thái", "Thao tác"].map((h) => (
@@ -169,7 +179,7 @@ const UserList = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => (
+                  paginatedUsers.map((user) => (
                     <TableRow key={user.id} hover sx={{ "&:hover": { bgcolor: "#f0f4ff" } }}>
                       <TableCell sx={{ fontWeight: 600, color: "#64748b" }}>#{user.id}</TableCell>
                       <TableCell>
@@ -214,6 +224,19 @@ const UserList = () => {
                 )}
               </TableBody>
             </Table>
+            <TablePagination
+              component="div"
+              count={sortedUsers.length}
+              page={page}
+              onPageChange={(event, newPage) => setPage(newPage)}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={(event) => {
+                setRowsPerPage(parseInt(event.target.value, 10));
+                setPage(0);
+              }}
+              rowsPerPageOptions={[10, 20, 50]}
+              labelRowsPerPage="Dòng/trang"
+            />
           </TableContainer>
         )}
       </Container>

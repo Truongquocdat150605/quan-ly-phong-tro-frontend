@@ -13,6 +13,7 @@ import api from "../../services/api";
 import StatCard from "../../components/admin/StatCard";
 import DashboardChart from "../../components/admin/DashboardChart";
 import RecentActivities from "../../components/admin/RecentActivities";
+import { sortNewestFirst } from "../../utils/adminListUtils";
 
 const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -41,8 +42,8 @@ const AdminDashboard = () => {
       ]);
 
       if (statsRes?.success && statsRes?.data) setStats(statsRes.data);
-      if (Array.isArray(contractsRes)) setRecentContracts(contractsRes.slice(0, 5));
-      if (Array.isArray(requestsRes)) setRecentRequests(requestsRes.slice(0, 5));
+      if (Array.isArray(contractsRes)) setRecentContracts(sortNewestFirst(contractsRes, ["lastModifiedDate", "updatedAt", "createdAt", "startDate", "id"]).slice(0, 5));
+      if (Array.isArray(requestsRes)) setRecentRequests(sortNewestFirst(requestsRes, ["updatedAt", "lastModifiedDate", "createdAt", "desiredMoveInDate", "id"]).slice(0, 5));
     } catch (error) {
       console.error("Lỗi tải dashboard:", error);
       toast.error("Không thể tải dữ liệu dashboard");

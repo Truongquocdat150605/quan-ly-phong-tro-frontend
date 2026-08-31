@@ -19,6 +19,7 @@ import {
   LinearProgress,
   Tabs,
   Tab,
+  TablePagination,
 } from "@mui/material";
 import {
   Build as BuildIcon,
@@ -30,6 +31,7 @@ import {
 import { toast } from "react-toastify";
 import api from "../../../services/api";
 import UpdateStatusDialog, { statusConfig } from "./UpdateStatusDialog";
+import { paginateRows, sortNewestFirst } from "../../../utils/adminListUtils";
 
 const getStatusChip = (status) => {
   const config = statusConfig[status] || statusConfig.PENDING;
@@ -54,6 +56,8 @@ const MaintenanceList = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedIssue, setSelectedIssue] = useState(null);
   const [tabValue, setTabValue] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const fetchIssues = async () => {
     setLoading(true);
@@ -100,6 +104,12 @@ const MaintenanceList = () => {
     if (tabValue === 3) return issue.status === "RESOLVED";
     return true;
   });
+  const sortedIssues = sortNewestFirst(filteredIssues, ["updatedAt", "lastModifiedDate", "createdAt", "id"]);
+  const paginatedIssues = paginateRows(sortedIssues, page, rowsPerPage);
+
+  useEffect(() => {
+    setPage(0);
+  }, [tabValue]);
 
   const stats = {
     total: issues.length,
@@ -221,12 +231,13 @@ const MaintenanceList = () => {
         <TableContainer
           component={Paper}
           sx={{
-            borderRadius: 4,
-            overflow: "hidden",
+            borderRadius: 2,
+            overflowX: "auto",
+            overflowY: "visible",
             boxShadow: "0 10px 30px rgba(0,0,0,0.05)",
           }}
         >
-          <Table>
+          <Table sx={{ minWidth: 980 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "#0f766e" }}>
                 <TableCell sx={{ color: "white", fontWeight: 700 }}>Mã</TableCell>
@@ -241,7 +252,7 @@ const MaintenanceList = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {filteredIssues.length === 0 ? (
+              {sortedIssues.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                     <BuildIcon sx={{ fontSize: 48, color: "#cbd5e1", mb: 1 }} />
@@ -249,7 +260,7 @@ const MaintenanceList = () => {
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredIssues.map((issue) => (
+                paginatedIssues.map((issue) => (
                   <TableRow key={issue.id} hover>
                     <TableCell>#{issue.id}</TableCell>
                     <TableCell>
@@ -319,6 +330,19 @@ const MaintenanceList = () => {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            component="div"
+            count={sortedIssues.length}
+            page={page}
+            onPageChange={(event, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 20, 50]}
+            labelRowsPerPage="Dòng/trang"
+          />
         </TableContainer>
 
         {/* Update Status Dialog */}

@@ -4,15 +4,19 @@
  * @module pages/admin/invoices
  */
 import React, { useEffect, useState } from "react";
-import { Box, Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Chip, Grid, Tooltip, LinearProgress, Stack } from "@mui/material";
-import { Receipt as ReceiptIcon, CheckCircle as CheckCircleIcon, PendingActions as PendingIcon, Warning as WarningIcon, PictureAsPdf as PdfIcon, Edit as EditIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { Box, Button, Container, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Chip, Grid, Tooltip, LinearProgress, Stack, TablePagination, Tabs, Tab } from "@mui/material";
+import { Receipt as ReceiptIcon, CheckCircle as CheckCircleIcon, PendingActions as PendingIcon, Warning as WarningIcon, PictureAsPdf as PdfIcon, Edit as EditIcon, Delete as DeleteIcon, Payments as CashIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import api from "../../../services/api";
+import paymentService from "../../../features/payment/paymentService";
 import { formatVND } from "../../../utils/formatVND";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { RobotoBase64 } from "../../../utils/RobotoFont";
+import InvoiceDetailModal from "../../../components/tenant/InvoiceDetailModal";
+import { Visibility as VisibilityIcon } from "@mui/icons-material";
+import { paginateRows, sortNewestFirst } from "../../../utils/adminListUtils";
 
 const getStatusChip = (status) => {
   switch (status) {
@@ -33,22 +37,43 @@ const InvoiceList = () => {
   const navigate = useNavigate();
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openDetail, setOpenDetail] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [schedulerStatus, setSchedulerStatus] = useState(null);
+  const [tabValue, setTabValue] = useState(0);
 
-  const fetchInvoices = async () => {
+  const handleViewDetail = (invoice) => {
+    setSelectedInvoice(invoice);
+    setOpenDetail(true);
+  };
+
+  const handleCloseDetail = () => {
+    setOpenDetail(false);
+    setSelectedInvoice(null);
+  };
+
+  const fetchInvoices = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const res = await api.get("/invoices");
       const data = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : (res?.content || []));
       setInvoices(data);
+      api.get("/invoices/scheduler-status")
+        .then((status) => setSchedulerStatus(status?.data || status))
+        .catch(() => setSchedulerStatus(null));
     } catch (error) {
       toast.error("Lỗi khi tải danh sách hóa đơn");
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchInvoices();
+    const intervalId = setInterval(() => fetchInvoices(true), 30000);
+    return () => clearInterval(intervalId);
   }, []);
 
   const handleDelete = async (id) => {
@@ -134,6 +159,39 @@ const InvoiceList = () => {
     totalAmount: invoices.reduce((sum, i) => sum + (i.totalAmount || 0), 0),
     unpaidAmount: invoices.filter((i) => i.status !== "PAID").reduce((sum, i) => sum + (i.totalAmount || 0), 0),
   };
+  const sortedInvoices = sortNewestFirst(invoices, ["updatedAt", "lastModifiedDate", "billingDate", "paymentDate", "id"]);
+  const filteredInvoices = sortedInvoices.filter(invoice => {
+    if (tabValue === 0) return true;
+    if (tabValue === 1) return invoice.status !== "PAID";
+    if (tabValue === 2) return invoice.status === "PAID";
+    return true;
+  });
+  const paginatedInvoices = paginateRows(filteredInvoices, page, rowsPerPage);
+
+  const handleGenerateMonthly = async () => {
+    if (window.confirm("Chạy demo sinh hóa đơn cho tất cả phòng đang thuê? Chế độ demo sẽ tạo thêm hóa đơn mới ngay cả khi tháng này đã có hóa đơn.")) {
+      try {
+        setLoading(true);
+        await api.post("/invoices/generate-monthly?force=true");
+        toast.success("Đã sinh hóa đơn định kỳ thành công!");
+        fetchInvoices();
+      } catch (error) {
+        toast.error("Lỗi khi sinh hóa đơn định kỳ");
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleConfirmCashPayment = async (invoice) => {
+    if (!window.confirm(`Xac nhan da thu tien mat cho hoa don #${invoice.id}?`)) return;
+    try {
+      await paymentService.confirmCashPayment(invoice.id);
+      toast.success("Da xac nhan thu tien mat va cap nhat hoa don.");
+      fetchInvoices(true);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Loi khi xac nhan thanh toan tien mat");
+    }
+  };
 
   if (loading) {
     return (
@@ -148,14 +206,38 @@ const InvoiceList = () => {
       <Container maxWidth="xl">
         {/* Header */}
         <Paper sx={{ p: 4, mb: 4, borderRadius: 4, background: "linear-gradient(135deg, #0f766e 0%, #0d9488 100%)", color: "white" }}>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <ReceiptIcon sx={{ fontSize: 48 }} />
-            <Box>
-              <Typography variant="h4" fontWeight={800}>Quản Lý Hóa Đơn</Typography>
-              <Typography variant="body2" sx={{ opacity: 0.9 }}>Quản lý hóa đơn tiền phòng, điện, nước, dịch vụ</Typography>
+              <ReceiptIcon sx={{ fontSize: 48 }} />
+              <Box>
+                <Typography variant="h4" fontWeight={800}>Quản Lý Hóa Đơn</Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9 }}>Quản lý hóa đơn tiền phòng, điện, nước, dịch vụ</Typography>
+              </Box>
             </Box>
+            <Button 
+              variant="contained" 
+              color="warning" 
+              onClick={handleGenerateMonthly}
+              sx={{ fontWeight: "bold", borderRadius: 2, boxShadow: 3 }}
+            >
+              ⚡ Chạy Sinh Hóa Đơn (Demo)
+            </Button>
           </Box>
         </Paper>
+
+        {schedulerStatus && (
+          <Paper sx={{ p: 2, mb: 3, borderRadius: 2, border: "1px solid #fde68a", bgcolor: "#fffbeb" }}>
+              <Typography variant="body2" fontWeight={700} color="#92400e">
+              Tự động sinh hóa đơn: cron {schedulerStatus.cron || "-"} {schedulerStatus.forceCreate ? "(demo tạo thật)" : "(chống trùng)"}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Lần chạy gần nhất: {schedulerStatus.lastRunAt ? new Date(schedulerStatus.lastRunAt).toLocaleString("vi-VN") : "Chưa chạy"} |
+              Tạo mới: {schedulerStatus.created ?? 0} |
+              Bỏ qua: {schedulerStatus.skipped ?? 0} |
+              Lỗi: {schedulerStatus.failed ?? 0}
+            </Typography>
+          </Paper>
+        )}
 
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -185,9 +267,23 @@ const InvoiceList = () => {
           </Grid>
         </Grid>
 
+        {/* Tabs Filter */}
+        <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+          <Tabs 
+            value={tabValue} 
+            onChange={(e, v) => { setTabValue(v); setPage(0); }}
+            textColor="primary"
+            indicatorColor="primary"
+          >
+            <Tab label="Tất cả" />
+            <Tab label="Chưa thanh toán" />
+            <Tab label="Đã thanh toán" />
+          </Tabs>
+        </Box>
+
         {/* Invoices Table */}
-        <TableContainer component={Paper} sx={{ borderRadius: 4, overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
-          <Table>
+        <TableContainer component={Paper} sx={{ borderRadius: 2, overflowX: "auto", overflowY: "visible", boxShadow: "0 10px 30px rgba(0,0,0,0.05)" }}>
+          <Table sx={{ minWidth: 1120 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "#0f766e" }}>
                 <TableCell sx={{ color: "white", fontWeight: 700 }}>Mã HD</TableCell>
@@ -202,12 +298,12 @@ const InvoiceList = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {invoices.length === 0 ? (
+              {filteredInvoices.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={9} align="center" sx={{ py: 4 }}><Typography color="text.secondary">Không có hóa đơn nào</Typography></TableCell>
                 </TableRow>
               ) : (
-                invoices.map((invoice) => (
+                paginatedInvoices.map((invoice) => (
                   <TableRow key={invoice.id} hover>
                     <TableCell>#{invoice.id}</TableCell>
                     <TableCell>Phòng {invoice.contract?.room?.roomNumber}</TableCell>
@@ -221,15 +317,27 @@ const InvoiceList = () => {
                     <TableCell>{getStatusChip(invoice.status)}</TableCell>
                     <TableCell align="center">
                       <Stack direction="row" spacing={0.5} justifyContent="center">
+                        <Tooltip title="Xem chi tiết">
+                          <IconButton size="small" color="info" onClick={() => handleViewDetail(invoice)}>
+                            <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
                         <Tooltip title="Xuất PDF">
                           <IconButton size="small" color="secondary" onClick={() => handleExportPDF(invoice)}>
                             <PdfIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title="Chỉnh sửa">
+                          <span>
+                          {invoice.status !== "PAID" && (
+                            <IconButton size="small" color="success" onClick={() => handleConfirmCashPayment(invoice)} title="Xac nhan thu tien mat">
+                              <CashIcon fontSize="small" />
+                            </IconButton>
+                          )}
                           <IconButton size="small" color="primary" onClick={() => navigate(`/admin/invoices/edit/${invoice.id}`)}>
                             <EditIcon fontSize="small" />
                           </IconButton>
+                          </span>
                         </Tooltip>
                         <Tooltip title="Xóa">
                           <IconButton size="small" color="error" onClick={() => handleDelete(invoice.id)}>
@@ -243,7 +351,27 @@ const InvoiceList = () => {
               )}
             </TableBody>
           </Table>
+          <TablePagination
+            component="div"
+            count={filteredInvoices.length}
+            page={page}
+            onPageChange={(event, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(event) => {
+              setRowsPerPage(parseInt(event.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[10, 20, 50]}
+            labelRowsPerPage="Dòng/trang"
+          />
         </TableContainer>
+
+        {/* Detail Modal */}
+        <InvoiceDetailModal 
+          open={openDetail} 
+          handleClose={handleCloseDetail} 
+          selectedInvoice={selectedInvoice} 
+        />
       </Container>
     </Box>
   );
