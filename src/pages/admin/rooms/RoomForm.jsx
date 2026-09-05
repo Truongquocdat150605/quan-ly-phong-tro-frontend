@@ -30,8 +30,7 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import api from "../../../services/api";
-
-const IMAGE_BASE_URL = (process.env.REACT_APP_API_BASE_URL || "http://localhost:8082") + "/uploads/";
+import { UPLOADS_URL as IMAGE_BASE_URL } from "../../../config";
 
 const STATUS_OPTIONS = [
   { value: "AVAILABLE", label: "Trống", color: "#10b981" },

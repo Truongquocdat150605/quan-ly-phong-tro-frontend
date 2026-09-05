@@ -10,9 +10,10 @@ import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { motion } from "framer-motion";
 
+import { UPLOADS_URL as IMAGE_BASE } from "../../config";
+
 const PLACEHOLDER_IMG =
   "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80";
-const IMAGE_BASE = (process.env.REACT_APP_API_BASE_URL || "http://localhost:8082") + "/uploads/";
 
 const getRoomImageUrl = (img) => {
   if (!img) return PLACEHOLDER_IMG;

@@ -42,8 +42,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../services/api";
 import { formatVND } from "../../../utils/formatVND";
 import { paginateRows, sortNewestFirst } from "../../../utils/adminListUtils";
-
-const IMAGE_BASE_URL = (process.env.REACT_APP_API_BASE_URL || "http://localhost:8082") + "/uploads/";
+import { UPLOADS_URL as IMAGE_BASE_URL } from "../../../config";
 
 const STATUS_CONFIG = {
   AVAILABLE: { label: "Trống", color: "#10b981", bgColor: "#d1fae5", icon: <CheckCircleIcon /> },
