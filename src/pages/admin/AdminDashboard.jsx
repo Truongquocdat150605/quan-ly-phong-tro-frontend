@@ -23,6 +23,8 @@ const AdminDashboard = () => {
     pendingContracts: 0, pendingRequests: 0, pendingMaintenance: 0,
   });
   const [expiringContracts, setExpiringContracts] = useState([]);
+  const [recentContracts, setRecentContracts] = useState([]);
+  const [recentRequests, setRecentRequests] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
