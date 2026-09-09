@@ -52,10 +52,14 @@ const handleLogin = async (e) => {
 
         toast.success(`Chào mừng ${user?.fullName || user?.username || "bạn"} trở lại!`);
 
+        const targetPath = location.state?.from?.pathname;
+
         if (role === 'ADMIN') {
             window.location.href = '/admin/dashboard';
+        } else if (targetPath) {
+            window.location.href = targetPath;
         } else {
-            window.location.href = '/';
+            window.location.href = window.location.origin + '/';
         }
     } catch (err) {
         console.error("❌ [Login handleLogin Error]:", err);
