@@ -16,10 +16,12 @@ export const getImageUrl = (img, defaultPlaceholder = "") => {
   return `${UPLOADS_URL}${img}`;
 };
 
-export default {
+const config = {
   API_BASE_URL,
   API_URL,
   WS_URL,
   UPLOADS_URL,
   getImageUrl,
 };
+
+export default config;

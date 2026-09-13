@@ -21,7 +21,7 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
-import { API_BASE_URL, UPLOADS_URL as IMAGE_BASE } from "../../config";
+import { UPLOADS_URL as IMAGE_BASE } from "../../config";
 
 const quickReplies = [
   "Cach tim phong trong?",

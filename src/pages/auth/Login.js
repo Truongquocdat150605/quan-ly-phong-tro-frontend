@@ -23,53 +23,52 @@ const Login = () => {
         }
     }, [location]);
 
-// Login.js - phần handleLogin
-const handleLogin = async (e) => {
-    e.preventDefault();
-    setError('');
-    
-    // Validate dữ liệu nhập
-    if (!username.trim()) {
-        setError('Vui lòng nhập tên đăng nhập hoặc email!');
-        return;
-    }
-    if (!password) {
-        setError('Vui lòng nhập mật khẩu!');
-        return;
-    }
-    if (password.length < 4) {
-        setError('Mật khẩu không hợp lệ (phải có ít nhất 4 ký tự)!');
-        return;
-    }
-
-    setLoading(true);
-    
-    try {
-        const user = await AuthService.login(username, password);
-        console.log("[Login handleLogin] User result:", user);
-        const role = normalizeRole(user?.role);
-        console.log("[Login handleLogin] Role:", role);
-
-        toast.success(`Chào mừng ${user?.fullName || user?.username || "bạn"} trở lại!`);
-
-        const targetPath = location.state?.from?.pathname;
-
-        if (role === 'ADMIN') {
-            window.location.href = '/admin/dashboard';
-        } else if (targetPath) {
-            window.location.href = targetPath;
-        } else {
-            window.location.href = window.location.origin + '/';
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setError('');
+        
+        // Validate dữ liệu nhập
+        if (!username.trim()) {
+            setError('Vui lòng nhập tên đăng nhập hoặc email!');
+            return;
         }
-    } catch (err) {
-        console.error("[Login handleLogin Error]:", err);
-        const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Tên đăng nhập hoặc mật khẩu không đúng';
-        setError(errorMessage);
-        toast.error(errorMessage);
-    } finally {
-        setLoading(false);
-    }
-};    return (
+        if (!password) {
+            setError('Vui lòng nhập mật khẩu!');
+            return;
+        }
+        if (password.length < 4) {
+            setError('Mật khẩu không hợp lệ (phải có ít nhất 4 ký tự)!');
+            return;
+        }
+
+        setLoading(true);
+        
+        try {
+            const user = await AuthService.login(username, password);
+            const role = normalizeRole(user?.role);
+
+            toast.success(`Chào mừng ${user?.fullName || user?.username || "bạn"} trở lại!`);
+
+            const targetPath = location.state?.from?.pathname;
+
+            if (role === 'ADMIN') {
+                window.location.href = '/admin/dashboard';
+            } else if (targetPath) {
+                window.location.href = targetPath;
+            } else {
+                window.location.href = window.location.origin + '/';
+            }
+        } catch (err) {
+            console.error("[Login handleLogin Error]:", err);
+            const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Tên đăng nhập hoặc mật khẩu không đúng';
+            setError(errorMessage);
+            toast.error(errorMessage);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
         <Box sx={{ 
             minHeight: '100vh', 
             display: 'flex', 
