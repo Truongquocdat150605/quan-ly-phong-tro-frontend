@@ -3,7 +3,17 @@
  * @description Centralized configuration for API base URLs and environment variables.
  */
 
-export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:8082";
+const getApiBaseUrl = () => {
+  if (process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+    return "https://quan-ly-phong-tro-backend-iqv1.onrender.com";
+  }
+  return "http://localhost:8082";
+};
+
+export const API_BASE_URL = getApiBaseUrl();
 export const API_URL = `${API_BASE_URL}/api`;
 export const WS_URL = `${API_BASE_URL}/ws`;
 export const UPLOADS_URL = `${API_BASE_URL}/uploads/`;
