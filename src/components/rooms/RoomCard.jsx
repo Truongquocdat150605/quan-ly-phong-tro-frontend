@@ -110,16 +110,26 @@ const RoomCard = React.memo(function RoomCard({
             direction="row" justifyContent="space-between" alignItems="center"
             sx={{ position: "absolute", top: 12, left: 12, right: 12, zIndex: 3 }}
           >
-            <Chip
-              label="Đang trống"
-              size="small"
-              sx={{
-                bgcolor: "#f0fdf4", color: "#166534",
-                fontWeight: 600, fontSize: "0.75rem", borderRadius: "12px",
-                border: "1px solid #bbf7d0",
-                boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
-              }}
-            />
+            {(() => {
+              const st = room?.status?.toUpperCase();
+              let label = "Đang trống", bgcolor = "#f0fdf4", color = "#166534", border = "1px solid #bbf7d0";
+              if (st === "OCCUPIED" || st === "DANG_THUE" || st === "RENTED") {
+                label = "Đã thuê"; bgcolor = "#fef2f2"; color = "#991b1b"; border = "1px solid #fecaca";
+              } else if (st === "MAINTENANCE" || st === "BAO_TRI") {
+                label = "Bảo trì"; bgcolor = "#fffbe8"; color = "#854d0e"; border = "1px solid #fef08a";
+              }
+              return (
+                <Chip
+                  label={label}
+                  size="small"
+                  sx={{
+                    bgcolor, color, border,
+                    fontWeight: 600, fontSize: "0.75rem", borderRadius: "12px",
+                    boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+                  }}
+                />
+              );
+            })()}
             <IconButton
               size="small"
               onClick={(e) => { e.stopPropagation(); setLiked((l) => !l); }}

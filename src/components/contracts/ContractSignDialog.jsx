@@ -14,6 +14,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { toast } from "react-toastify";
 import { RobotoBase64 } from "../../utils/RobotoFont";
+import { CONTACT_INFO } from "../../config";
 
 
 
@@ -84,7 +85,7 @@ const ContractSignDialog = ({ open, onClose, contract }) => {
       doc.setFont("Roboto", "normal");
       doc.setFontSize(10);
       doc.text("Smart Phòng Trọ Management System", 20, 82);
-      doc.text("Hotline: 0123 456 789", 20, 89);
+      doc.text(`Hotline: ${CONTACT_INFO.phone}`, 20, 89);
 
       doc.setFontSize(11);
       doc.setFont("Roboto", "bold");

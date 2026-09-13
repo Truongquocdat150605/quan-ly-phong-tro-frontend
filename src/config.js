@@ -26,12 +26,20 @@ export const getImageUrl = (img, defaultPlaceholder = "") => {
   return `${UPLOADS_URL}${img}`;
 };
 
+export const CONTACT_INFO = {
+  phone: process.env.REACT_APP_CONTACT_PHONE || "0987 654 321",
+  email: process.env.REACT_APP_CONTACT_EMAIL || "contact@smartphongtro.vn",
+  address: process.env.REACT_APP_CONTACT_ADDRESS || "41 Đường số 5, Tăng Nhơn Phú B, TP. Thủ Đức, TP.HCM",
+  workingHours: "Thứ 2 - Thứ 7 (08:00 - 17:30)",
+};
+
 const config = {
   API_BASE_URL,
   API_URL,
   WS_URL,
   UPLOADS_URL,
   getImageUrl,
+  CONTACT_INFO,
 };
 
 export default config;
