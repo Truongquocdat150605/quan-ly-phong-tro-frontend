@@ -12,6 +12,7 @@ import {
   TextField,
   Typography,
   Badge,
+  Button,
 } from "@mui/material";
 import {
   AddShoppingCart as BookIcon,
@@ -21,14 +22,16 @@ import {
   Visibility as EyeIcon,
   AutoAwesome as SparkleIcon,
   CheckCircle as CheckIcon,
+  TaskAlt as SuccessIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import api from "../../services/api";
 import { UPLOADS_URL as IMAGE_BASE } from "../../config";
+import { getCurrentUser } from "../../utils/authUtils";
 
 const quickReplies = [
+  "⚡ Đặt phòng giúp tôi",
   "💡 Tìm phòng dưới 3 triệu",
-  "⚡ Phòng có máy lạnh & ban công",
   "🛡️ Phòng trống chuyển vào ngay",
   "📋 Hướng dẫn thủ tục thuê phòng",
 ];
@@ -46,8 +49,9 @@ const ChatWidget = () => {
   const [messages, setMessages] = useState([
     {
       role: "bot",
-      text: "Xin chào! Tôi là Trợ Lý AI Agent Matchmaker của Smart Phòng Trọ. Hãy cho tôi biết ngân sách, khu vực hoặc tiện ích bạn mong muốn, tôi sẽ tự động tìm kiếm và phân tích phòng phù hợp nhất cho bạn!",
+      text: "Xin chào! Tôi là Trợ Lý AI Agent Matchmaker. Bạn có thể yêu cầu tôi tìm phòng hoặc nói 'Đặt phòng giúp tôi', tôi sẽ tự động gửi đơn đặt phòng lên hệ thống cho bạn ngay lập tức!",
       roomsInfo: [],
+      bookingSuccess: null,
     },
   ]);
   const [input, setInput] = useState("");
@@ -59,6 +63,75 @@ const ChatWidget = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
 
+  const handleAutonomousBooking = async (roomNumberTarget = null) => {
+    const user = getCurrentUser();
+    
+    // Fetch available rooms
+    let targetRoom = null;
+    try {
+      const roomsRes = await api.get("/rooms/public");
+      const allRooms = Array.isArray(roomsRes.data) ? roomsRes.data : Array.isArray(roomsRes) ? roomsRes : [];
+      const availableRooms = allRooms.filter(r => r.status === "AVAILABLE" || !r.status);
+      
+      if (roomNumberTarget) {
+        targetRoom = availableRooms.find(r => String(r.roomNumber) === String(roomNumberTarget));
+      }
+      if (!targetRoom && availableRooms.length > 0) {
+        targetRoom = availableRooms[0];
+      }
+    } catch (e) {
+      console.error("Fetch rooms failed:", e);
+    }
+
+    if (!targetRoom) {
+      return {
+        text: "Hiện tại hệ thống không còn phòng trống sẵn sàng để đặt tự động. Vui lòng quay lại sau!",
+        bookingSuccess: null,
+      };
+    }
+
+    if (!user) {
+      return {
+        text: `Tôi đã chọn được Phòng ${targetRoom.roomNumber} (${formatVND(targetRoom.price)}/tháng) cho bạn! Vui lòng Đăng nhập tài khoản để tôi tự động gửi yêu cầu đặt phòng nhé.`,
+        bookingSuccess: null,
+        needLogin: true,
+      };
+    }
+
+    // Execute Autonomous Booking API Call
+    try {
+      const payload = {
+        roomId: targetRoom.id,
+        userId: user.id || null,
+        fullName: user.fullName || user.username || "Khách hàng",
+        phone: user.phone || "0987654321",
+        email: user.email || "khachhang@gmail.com",
+        desiredMoveInDate: new Date().toISOString().split("T")[0],
+        note: "Yêu cầu đặt phòng tự động bởi Trợ lý AI Agent",
+      };
+
+      await api.post("/public/rental-requests", payload);
+
+      return {
+        text: `🤖 THÔNG BÁO TỰ ĐỘNG TỪ AI AGENT:\nTôi đã thực thi đặt thành công Phòng ${targetRoom.roomNumber} cho bạn! Đơn đăng ký đã được gửi trực tiếp đến Admin phê duyệt.`,
+        bookingSuccess: {
+          roomNumber: targetRoom.roomNumber,
+          price: targetRoom.price,
+          fullName: user.fullName || user.username,
+          phone: user.phone || "Đã lưu",
+          status: "CHỜ ADMIN DUYỆT",
+        },
+      };
+    } catch (err) {
+      console.error("Autonomous booking API failed:", err);
+      return {
+        text: `Dạ tôi gặp chút gián đoạn khi tự đặt Phòng ${targetRoom.roomNumber}. Bạn có thể bấm nút 'Đặt Ngay' bên dưới để điền form nhanh nhé!`,
+        roomsInfo: [targetRoom],
+        bookingSuccess: null,
+      };
+    }
+  };
+
   const handleSend = async (text) => {
     const cleanText = text.trim();
     if (!cleanText || loading) return;
@@ -66,6 +139,21 @@ const ChatWidget = () => {
     setMessages((prev) => [...prev, { role: "user", text: cleanText }]);
     setInput("");
     setLoading(true);
+
+    // Detect Autonomous Booking Intent
+    const lower = cleanText.toLowerCase();
+    const isBookingIntent = lower.includes("đặt phòng") || lower.includes("thuê phòng") || lower.includes("đặt giúp") || lower.includes("đặt ngay");
+
+    if (isBookingIntent) {
+      // Extract room number if mentioned, e.g. "đặt phòng 101"
+      const match = cleanText.match(/(?:phòng|phong)\s*(\d+)/i);
+      const roomNum = match ? match[1] : null;
+
+      const bookingResult = await handleAutonomousBooking(roomNum);
+      setMessages((prev) => [...prev, { role: "bot", ...bookingResult }]);
+      setLoading(false);
+      return;
+    }
 
     try {
       const res = await api.post("/public/chat", {
@@ -77,13 +165,12 @@ const ChatWidget = () => {
         ...prev,
         {
           role: "bot",
-          text: res?.reply || "Tôi đã phân tích danh sách phòng trọ hiện có theo yêu cầu của bạn.",
+          text: res?.reply || "Tôi đã phân tích thông tin của bạn.",
           roomsInfo: Array.isArray(res?.roomsInfo) ? res.roomsInfo : [],
         },
       ]);
     } catch (error) {
       console.error("Chat AI Agent error:", error);
-      // Fallback AI Matching from public rooms
       try {
         const roomsRes = await api.get("/rooms/public");
         const allRooms = Array.isArray(roomsRes.data) ? roomsRes.data : Array.isArray(roomsRes) ? roomsRes : [];
@@ -102,7 +189,7 @@ const ChatWidget = () => {
           ...prev,
           {
             role: "bot",
-            text: "Hệ thống AI Agent hiện đang kết nối trực tiếp với server. Bạn có thể xem danh sách phòng trống ở mục 'Danh sách phòng' hoặc liên hệ Admin.",
+            text: "Hệ thống AI Agent hiện đang kết nối trực tiếp với server. Bạn có thể xem danh sách phòng trống ở mục 'Danh sách phòng'.",
             roomsInfo: [],
           },
         ]);
@@ -114,12 +201,64 @@ const ChatWidget = () => {
 
   const renderBotMessage = (message) => {
     const rooms = message.roomsInfo || [];
+    const booking = message.bookingSuccess;
+
     return (
       <Box>
-        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", mb: rooms.length ? 1.5 : 0, lineHeight: 1.6 }}>
+        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap", mb: rooms.length || booking ? 1.5 : 0, lineHeight: 1.6 }}>
           {message.text}
         </Typography>
 
+        {/* Autonomous Booking Success Card */}
+        {booking && (
+          <Paper
+            elevation={0}
+            sx={{
+              mt: 1.5, p: 2, borderRadius: 3,
+              background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+              border: "1.5px solid #86efac",
+              boxShadow: "0 4px 15px rgba(22,163,74,0.12)"
+            }}
+          >
+            <Stack direction="row" alignItems="center" spacing={1} mb={1}>
+              <SuccessIcon sx={{ color: "#16a34a", fontSize: 22 }} />
+              <Typography variant="subtitle2" fontWeight={800} color="#15803d">
+                ĐÃ TỰ ĐỘNG TẠO ĐƠN THUÊ
+              </Typography>
+            </Stack>
+            <Box sx={{ bgcolor: "white", p: 1.5, borderRadius: 2, mb: 1.5 }}>
+              <Typography variant="body2" fontWeight={700} color="#0f172a">
+                Phòng {booking.roomNumber} · {formatVND(booking.price)}/tháng
+              </Typography>
+              <Typography variant="caption" color="text.secondary" display="block">
+                Người đặt: {booking.fullName} ({booking.phone})
+              </Typography>
+              <Typography variant="caption" fontWeight={700} color="#16a34a" display="block" mt={0.5}>
+                Trạng thái: {booking.status}
+              </Typography>
+            </Box>
+            <Button
+              fullWidth size="small" variant="contained"
+              onClick={() => { setOpen(false); navigate("/my-contracts"); }}
+              sx={{ bgcolor: "#16a34a", fontWeight: 700, "&:hover": { bgcolor: "#15803d" } }}
+            >
+              Xem hợp đồng & yêu cầu của tôi
+            </Button>
+          </Paper>
+        )}
+
+        {/* Need Login Card */}
+        {message.needLogin && (
+          <Button
+            size="small" variant="contained"
+            onClick={() => { setOpen(false); navigate("/login"); }}
+            sx={{ mt: 1.5, bgcolor: "#0f766e", fontWeight: 700 }}
+          >
+            Đăng nhập ngay để AI tự đặt phòng
+          </Button>
+        )}
+
+        {/* Rooms Info List */}
         {rooms.length > 0 && (
           <Stack spacing={1.5} mt={1}>
             {rooms.slice(0, 3).map((room, idx) => (
@@ -174,12 +313,9 @@ const ChatWidget = () => {
                     <Chip
                       size="small"
                       icon={<BookIcon sx={{ fontSize: "14px !important" }} />}
-                      label="Đặt ngay"
+                      label="AI Đặt Tự Động"
                       color="primary"
-                      onClick={() => {
-                        setOpen(false);
-                        navigate("/booking-form", { state: { roomId: room.id } });
-                      }}
+                      onClick={() => handleSend(`Đặt giúp tôi phòng ${room.roomNumber}`)}
                       sx={{ flex: 1, cursor: "pointer", bgcolor: "#0f766e", fontWeight: 700 }}
                     />
                   </Stack>
@@ -302,7 +438,7 @@ const ChatWidget = () => {
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, ml: 4, my: 1 }}>
                   <CircularProgress size={18} sx={{ color: "#0f766e" }} />
                   <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                    AI Agent đang tìm kiếm & phân tích phòng...
+                    AI Agent đang tự động xử lý yêu cầu...
                   </Typography>
                 </Box>
               )}
@@ -335,7 +471,7 @@ const ChatWidget = () => {
               <TextField
                 fullWidth
                 size="small"
-                placeholder="Nhập tiêu chí phòng bạn muốn tìm..."
+                placeholder="Nhập 'Đặt phòng giúp tôi' hoặc tiêu chí..."
                 value={input}
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => event.key === "Enter" && handleSend(input)}
