@@ -60,9 +60,16 @@ const Login = () => {
             }
         } catch (err) {
             console.error("[Login handleLogin Error]:", err);
-            const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Tên đăng nhập hoặc mật khẩu không đúng';
+            let errorMessage = 'Tên đăng nhập hoặc mật khẩu không đúng!';
+            if (err.response?.status === 401) {
+                errorMessage = 'Tên đăng nhập hoặc mật khẩu không đúng! Vui lòng kiểm tra lại.';
+            } else if (err.response?.data?.message) {
+                errorMessage = err.response.data.message;
+            } else if (err.message && err.message.includes('Network Error')) {
+                errorMessage = 'Không thể kết nối đến máy chủ Backend! Vui lòng thử lại sau.';
+            }
             setError(errorMessage);
-            toast.error(errorMessage);
+            toast.error(errorMessage, { position: "top-center", autoClose: 5000 });
         } finally {
             setLoading(false);
         }
@@ -142,7 +149,7 @@ const Login = () => {
                         </Box>
                         
                         {error && (
-                            <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                            <Alert severity="error" sx={{ mb: 3, borderRadius: 2, fontWeight: 600 }}>
                                 {error}
                             </Alert>
                         )}
@@ -154,9 +161,10 @@ const Login = () => {
                                 margin="normal"
                                 variant="outlined"
                                 value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                onChange={(e) => { setUsername(e.target.value); setError(''); }}
                                 autoComplete="username"
                                 disabled={loading}
+                                error={!!error}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         borderRadius: 2,
@@ -174,9 +182,10 @@ const Login = () => {
                                 margin="normal"
                                 variant="outlined"
                                 value={password}
-                                onChange={(e) => setPassword(e.target.value)}
+                                onChange={(e) => { setPassword(e.target.value); setError(''); }}
                                 autoComplete="current-password"
                                 disabled={loading}
+                                error={!!error}
                                 sx={{
                                     '& .MuiOutlinedInput-root': {
                                         borderRadius: 2,
