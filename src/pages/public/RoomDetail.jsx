@@ -53,9 +53,9 @@ const DEFAULT_AMENITIES = [
 ];
 
 const statusConfig = {
-  AVAILABLE: { label: "✅ Còn phòng", color: "#10b981", bg: "#d1fae5" },
-  RENTED: { label: "🔴 Đã cho thuê", color: "#64748b", bg: "#f1f5f9" },
-  MAINTENANCE: { label: "🔧 Đang bảo trì", color: "#f59e0b", bg: "#fef3c7" },
+  AVAILABLE: { label: "Còn phòng", color: "#10b981", bg: "#d1fae5" },
+  RENTED: { label: "Đã cho thuê", color: "#64748b", bg: "#f1f5f9" },
+  MAINTENANCE: { label: "Đang bảo trì", color: "#f59e0b", bg: "#fef3c7" },
 };
 
 const RoomDetail = () => {

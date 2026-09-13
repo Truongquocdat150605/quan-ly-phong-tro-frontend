@@ -272,10 +272,10 @@ const TenantProfile = () => {
               Cần hỗ trợ? Liên hệ với chúng tôi qua:
             </Typography>
             <Typography variant="body2">
-              📞 Hotline: <strong>0123 456 789</strong>
+              Hotline: <strong>0123 456 789</strong>
             </Typography>
             <Typography variant="body2">
-              📧 Email: <strong>support@smartphongtro.com</strong>
+              Email: <strong>support@smartphongtro.com</strong>
             </Typography>
           </Paper>
         </Grid>

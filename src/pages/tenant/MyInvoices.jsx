@@ -90,7 +90,7 @@ const MyInvoices = () => {
       } else if (status === "PAID" && paymentId) {
         try {
           await paymentService.confirmPayment(paymentId);
-          toast.success("🎉 Thanh toán hóa đơn thành công!");
+          toast.success("Thanh toán hóa đơn thành công!");
           fetchMyInvoices();
         } catch (err) {
           console.error(err);
@@ -99,7 +99,7 @@ const MyInvoices = () => {
           window.history.replaceState({}, "", "/my-invoices");
         }
       } else if (status === "CANCELED") {
-        toast.error("❌ Giao dịch thanh toán đã bị hủy.");
+        toast.error("Giao dịch thanh toán đã bị hủy.");
         window.history.replaceState({}, "", "/my-invoices");
       }
     };

@@ -46,9 +46,9 @@ const handleLogin = async (e) => {
     
     try {
         const user = await AuthService.login(username, password);
-        console.log("🔑 [Login handleLogin] User result:", user);
+        console.log("[Login handleLogin] User result:", user);
         const role = normalizeRole(user?.role);
-        console.log("🔑 [Login handleLogin] Role:", role);
+        console.log("[Login handleLogin] Role:", role);
 
         toast.success(`Chào mừng ${user?.fullName || user?.username || "bạn"} trở lại!`);
 
@@ -62,7 +62,7 @@ const handleLogin = async (e) => {
             window.location.href = window.location.origin + '/';
         }
     } catch (err) {
-        console.error("❌ [Login handleLogin Error]:", err);
+        console.error("[Login handleLogin Error]:", err);
         const errorMessage = err.response?.data?.message || err.response?.data?.error || 'Tên đăng nhập hoặc mật khẩu không đúng';
         setError(errorMessage);
         toast.error(errorMessage);

@@ -139,7 +139,7 @@ export const exportInvoicePDF = (invoice) => {
     const fileName = `hoa-don-HD${String(invoice.id || 0).padStart(6, "0")}.pdf`;
     doc.save(fileName);
 
-    toast.success(`✅ Đã xuất hóa đơn ${fileName} thành công!`);
+    toast.success(`Đã xuất hóa đơn ${fileName} thành công!`);
   } catch (error) {
     console.error("Lỗi xuất PDF hóa đơn:", error);
     toast.error("Không thể xuất file PDF hóa đơn. Vui lòng thử lại.");

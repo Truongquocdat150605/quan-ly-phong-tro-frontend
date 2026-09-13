@@ -90,7 +90,7 @@ const RoomForm = ({ initialData, isEdit, roomId }) => {
 
   const handleFileChange = (event) => {
     const file = event.target.files?.[0] || null;
-    console.log("📸 [RoomForm handleFileChange] File selected:", file ? { name: file.name, size: file.size, type: file.type } : "No file");
+    console.log("[RoomForm handleFileChange] File selected:", file ? { name: file.name, size: file.size, type: file.type } : "No file");
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Kích thước ảnh không được vượt quá 5MB");
@@ -107,7 +107,7 @@ const RoomForm = ({ initialData, isEdit, roomId }) => {
   };
 
   const handleRemoveImage = () => {
-    console.log("📸 [RoomForm handleRemoveImage] Image removed");
+    console.log("[RoomForm handleRemoveImage] Image removed");
     setForm((prev) => ({ ...prev, image: null }));
     setPreviewUrl("");
     setImageError(false);
@@ -134,10 +134,10 @@ const RoomForm = ({ initialData, isEdit, roomId }) => {
     }
 
     if (form.image) {
-      console.log("📸 [RoomForm buildFormData] Appending new image file:", form.image.name);
+      console.log("[RoomForm buildFormData] Appending new image file:", form.image.name);
       data.append("image", form.image);
     } else {
-      console.log("📸 [RoomForm buildFormData] No new image file attached to FormData");
+      console.log("[RoomForm buildFormData] No new image file attached to FormData");
     }
 
     form.serviceIds.forEach((id) => data.append("serviceIds", String(id)));
@@ -157,22 +157,22 @@ const RoomForm = ({ initialData, isEdit, roomId }) => {
     try {
       setSaving(true);
       const data = buildFormData();
-      console.log("📸 [RoomForm handleSubmit] Sending request to backend...");
+      console.log("[RoomForm handleSubmit] Sending request to backend...");
 
       let res;
       if (isEdit && roomId) {
         res = await api.put(`/rooms/${roomId}`, data);
-        console.log("📸 [RoomForm handleSubmit] PUT /rooms response:", res);
+        console.log("[RoomForm handleSubmit] PUT /rooms response:", res);
         toast.success("Cập nhật phòng thành công");
       } else {
         res = await api.post("/rooms", data);
-        console.log("📸 [RoomForm handleSubmit] POST /rooms response:", res);
+        console.log("[RoomForm handleSubmit] POST /rooms response:", res);
         toast.success("Thêm phòng thành công");
       }
 
       navigate("/admin/rooms");
     } catch (error) {
-      console.error("❌ [RoomForm handleSubmit Error]:", error);
+      console.error("[RoomForm handleSubmit Error]:", error);
       const serverMsg = error.response?.data?.error || error.response?.data?.message;
       toast.error(serverMsg || "Không thể lưu thông tin phòng");
     } finally {
@@ -199,7 +199,7 @@ const RoomForm = ({ initialData, isEdit, roomId }) => {
             </Avatar>
             <Box>
               <Typography variant="h5" fontWeight={800}>
-                {isEdit ? "✏️ Chỉnh sửa phòng" : "➕ Thêm phòng mới"}
+                {isEdit ? "Chỉnh sửa phòng" : "Thêm phòng mới"}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 {isEdit ? "Cập nhật thông tin phòng trọ" : "Nhập thông tin phòng trọ mới"}
@@ -391,9 +391,8 @@ const RoomForm = ({ initialData, isEdit, roomId }) => {
               </Grid>
             </Grid>
 
-            {/* Alert Info */}
             <Alert severity="info" sx={{ mt: 3, borderRadius: 2 }}>
-              <Typography variant="body2" fontWeight={500}>💡 Lưu ý:</Typography>
+              <Typography variant="body2" fontWeight={600}>Lưu ý:</Typography>
               <Typography variant="caption" color="text.secondary">
                 • Số phòng là duy nhất và không thể trùng lặp<br />
                 • Sau khi tạo phòng, bạn có thể gán hợp đồng cho khách thuê<br />

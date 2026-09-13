@@ -164,7 +164,7 @@ const ContractList = () => {
             <Tab label="Đang hiệu lực" />
             <Tab label="Chờ duyệt" />
             <Tab label="Hết hạn" />
-            <Tab label={`⚠️ Sắp hết hạn (${stats.expiringSoon})`} />
+            <Tab label={`Sắp hết hạn (${stats.expiringSoon})`} />
           </Tabs>
         </Box>
 

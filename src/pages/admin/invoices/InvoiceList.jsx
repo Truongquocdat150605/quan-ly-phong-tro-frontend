@@ -220,7 +220,7 @@ const InvoiceList = () => {
               onClick={handleGenerateMonthly}
               sx={{ fontWeight: "bold", borderRadius: 2, boxShadow: 3 }}
             >
-              ⚡ Chạy Sinh Hóa Đơn (Demo)
+              Tự động sinh hóa đơn
             </Button>
           </Box>
         </Paper>
