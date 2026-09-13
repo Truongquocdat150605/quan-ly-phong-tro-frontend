@@ -56,7 +56,7 @@ const Login = () => {
             } else if (targetPath) {
                 window.location.href = targetPath;
             } else {
-                window.location.href = '/tenant/profile';
+                window.location.href = '/';
             }
         } catch (err) {
             console.error("[Login handleLogin Error]:", err);
